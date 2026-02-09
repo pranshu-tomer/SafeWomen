@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { StorageService } from '../services/StorageService';
 import { PermissionsService } from '../services/PermissionsService';
+import RNImmediatePhoneCall from 'react-native-immediate-phone-call';
 
 type ThreatScreenRouteProp = RouteProp<RootStackParamList, 'Threat'>;
 type ThreatScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Threat'>;
@@ -57,17 +58,17 @@ const ThreatScreen = () => {
                 console.log('Call permission granted:', hasPermission);
 
                 if (hasPermission) {
-                    const phoneUrl = `tel:${callContact}`;
-                    const canOpen = await Linking.canOpenURL(phoneUrl);
-                    console.log('Can open tel URL:', canOpen);
-
-                    if (canOpen) {
-                        console.log('✅ Opening dialer for:', callContact);
+                    try {
+                        console.log('✅ Making direct call to:', callContact);
+                        // Use immediate phone call to dial directly without user interaction
+                        RNImmediatePhoneCall.immediatePhoneCall(callContact);
+                        console.log('📞 Call initiated to:', callContact);
+                    } catch (error) {
+                        console.log('❌ Error making call:', error);
+                        // Fallback to dialer if direct call fails
+                        const phoneUrl = `tel:${callContact}`;
                         await Linking.openURL(phoneUrl);
-                        Alert.alert('Emergency Call', `Calling ${callContact}...`);
-                    } else {
-                        console.log('❌ Cannot open tel URL');
-                        Alert.alert('Error', 'Unable to make phone call');
+                        Alert.alert('Error', 'Unable to make direct call, opened dialer instead');
                     }
                 } else {
                     console.log('❌ Call permission not granted');

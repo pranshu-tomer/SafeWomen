@@ -19,6 +19,7 @@
     "react": "19.1.1",
     "react-native": "0.82.1",
     "react-native-fs": "^2.20.0",
+    "react-native-immediate-phone-call": "^2.0.0",
     "react-native-nitro-modules": "^0.33.2",
     "react-native-nitro-sound": "^0.2.10",
     "react-native-permissions": "^5.4.4",
