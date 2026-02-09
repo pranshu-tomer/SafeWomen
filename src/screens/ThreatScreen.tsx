@@ -139,7 +139,7 @@ const ThreatScreen = () => {
     const verifyPassword = () => {
         if (password === CORRECT_PASSWORD) {
             setModalVisible(false);
-            navigation.replace('Home');
+            navigation.replace('MainTabs');
         } else {
             Alert.alert("Incorrect Password", "Please try again.");
             setPassword('');

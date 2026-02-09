@@ -26,7 +26,7 @@ const RegistrationScreen = () => {
                 preference
             }, { timeout: 5000 }); // 5s timeout
             console.log("Save response:", response.status);
-            navigation.replace('Home');
+            navigation.replace('MainTabs');
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Failed to save contacts');

@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeLocation } from './LocationService';
 
 const CALL_CONTACT_KEY = '@emergency_call_contact';
 const SMS_CONTACTS_KEY = '@emergency_sms_contacts';
 const FEATURES_KEY = '@feature_settings';
+const SAFE_LOCATIONS_KEY = '@safe_locations';
 
 export interface EmergencyContacts {
     callContact: string | null;
@@ -138,6 +140,49 @@ export class StorageService {
             console.error('Error getting feature settings:', error);
             return DEFAULT_FEATURE_SETTINGS;
         }
+    }
+
+    /**
+     * Save safe locations
+     */
+    static async saveSafeLocations(locations: SafeLocation[]): Promise<void> {
+        try {
+            await AsyncStorage.setItem(SAFE_LOCATIONS_KEY, JSON.stringify(locations));
+        } catch (error) {
+            console.error('Error saving safe locations:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get all safe locations
+     */
+    static async getSafeLocations(): Promise<SafeLocation[]> {
+        try {
+            const locations = await AsyncStorage.getItem(SAFE_LOCATIONS_KEY);
+            return locations ? JSON.parse(locations) : [];
+        } catch (error) {
+            console.error('Error getting safe locations:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Add a new safe location
+     */
+    static async addSafeLocation(location: SafeLocation): Promise<void> {
+        const locations = await this.getSafeLocations();
+        locations.push(location);
+        await this.saveSafeLocations(locations);
+    }
+
+    /**
+     * Delete a safe location by ID
+     */
+    static async deleteSafeLocation(id: string): Promise<void> {
+        const locations = await this.getSafeLocations();
+        const filtered = locations.filter(loc => loc.id !== id);
+        await this.saveSafeLocations(filtered);
     }
 }
 

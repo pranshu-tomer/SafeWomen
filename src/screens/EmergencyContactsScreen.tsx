@@ -155,7 +155,7 @@ const EmergencyContactsScreen = () => {
                         text: 'Continue',
                         onPress: async () => {
                             await StorageService.saveContacts(callContact, smsContacts);
-                            navigation.navigate('Home');
+                            navigation.navigate('MainTabs');
                         },
                     },
                 ]
@@ -164,7 +164,7 @@ const EmergencyContactsScreen = () => {
         }
 
         await StorageService.saveContacts(callContact, smsContacts);
-        navigation.navigate('Home');
+        navigation.navigate('MainTabs');
     };
 
     return (

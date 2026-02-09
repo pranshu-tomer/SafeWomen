@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import AudioService from '../services/AudioService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { StorageService, FeatureSettings, DEFAULT_FEATURE_SETTINGS } from '../services/StorageService';
+import LocationService, { SafeLocation, Coordinates } from '../services/LocationService';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -12,6 +13,12 @@ const HomeScreen = () => {
     const navigation = useNavigation<HomeScreenNavigationProp>();
     const [isMonitoring, setIsMonitoring] = useState(false);
     const [features, setFeatures] = useState<FeatureSettings>(DEFAULT_FEATURE_SETTINGS);
+    const [isInSafeZone, setIsInSafeZone] = useState(false);
+    const [currentSafeZone, setCurrentSafeZone] = useState<string | null>(null);
+
+    // Store original feature state before auto-disabling
+    const originalFeaturesRef = useRef<FeatureSettings | null>(null);
+    const safeLocationsRef = useRef<SafeLocation[]>([]);
 
     // Load feature settings every time screen gains focus
     useFocusEffect(
@@ -19,19 +26,66 @@ const HomeScreen = () => {
             const loadSettings = async () => {
                 const savedSettings = await StorageService.getFeatureSettings();
                 setFeatures(savedSettings);
+
+                // Load safe locations for monitoring
+                const locations = await StorageService.getSafeLocations();
+                safeLocationsRef.current = locations;
             };
             loadSettings();
         }, [])
     );
 
+    // Handle safe zone location watching
+    useEffect(() => {
+        if (isMonitoring && features.safeLocation) {
+            // Start watching location for safe zone detection
+            LocationService.startWatchingLocation((coords: Coordinates) => {
+                const safeZone = LocationService.isInsideSafeZone(
+                    coords.latitude,
+                    coords.longitude,
+                    safeLocationsRef.current
+                );
+
+                if (safeZone && !isInSafeZone) {
+                    // Entered safe zone - disable features
+                    console.log('📍 Entered safe zone:', safeZone.name);
+                    setIsInSafeZone(true);
+                    setCurrentSafeZone(safeZone.name);
+
+                    // Store original state and disable all monitoring features
+                    originalFeaturesRef.current = { ...features };
+                } else if (!safeZone && isInSafeZone) {
+                    // Left safe zone - restore features
+                    console.log('📍 Left safe zone');
+                    setIsInSafeZone(false);
+                    setCurrentSafeZone(null);
+
+                    // Restore original features
+                    if (originalFeaturesRef.current) {
+                        StorageService.saveFeatureSettings(originalFeaturesRef.current);
+                        setFeatures(originalFeaturesRef.current);
+                        originalFeaturesRef.current = null;
+                    }
+                }
+            });
+
+            return () => {
+                LocationService.stopWatchingLocation();
+            };
+        }
+    }, [isMonitoring, features.safeLocation, isInSafeZone]);
+
     const toggleMonitoring = () => {
         if (isMonitoring) {
             AudioService.stopMonitoring();
+            LocationService.stopWatchingLocation();
             setIsMonitoring(false);
+            setIsInSafeZone(false);
+            setCurrentSafeZone(null);
         } else {
             setIsMonitoring(true);
             AudioService.startMonitoring((result) => {
-                if (result.threat) {
+                if (result.threat && !isInSafeZone) {
                     setIsMonitoring(false);
                     navigation.navigate('Threat', { details: result.details });
                 }
@@ -58,6 +112,18 @@ const HomeScreen = () => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Safe Zone Indicator */}
+                {isInSafeZone && (
+                    <View style={styles.safeZoneBanner}>
+                        <Text style={styles.safeZoneText}>
+                            📍 Safe Zone Active: {currentSafeZone}
+                        </Text>
+                        <Text style={styles.safeZoneSubtext}>
+                            Monitoring paused while in this location
+                        </Text>
+                    </View>
+                )}
+
                 {/* Safe Status */}
                 <View style={styles.safeContainer}>
                     <View style={styles.safeIcon} />
@@ -344,6 +410,25 @@ const styles = StyleSheet.create({
     },
     statusTextOn: {
         color: '#059669',
+    },
+    safeZoneBanner: {
+        backgroundColor: '#ECFDF5',
+        borderWidth: 1,
+        borderColor: '#10B981',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        alignItems: 'center',
+    },
+    safeZoneText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#059669',
+        marginBottom: 4,
+    },
+    safeZoneSubtext: {
+        fontSize: 14,
+        color: '#047857',
     },
 });
 
