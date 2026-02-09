@@ -1,24 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { StorageService, FeatureSettings, DEFAULT_FEATURE_SETTINGS } from '../services/StorageService';
 
 type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
 const SettingsScreen = () => {
     const navigation = useNavigation<SettingsScreenNavigationProp>();
-    const [features, setFeatures] = useState({
-        voiceDetection: false,
-        powerButton: false,
-        runningDetection: false,
-        throwDetection: false,
-        safeLocation: false,
-        switchOffProtection: false,
-    });
+    const [features, setFeatures] = useState<FeatureSettings>(DEFAULT_FEATURE_SETTINGS);
 
-    const toggleFeature = (feature: keyof typeof features) => {
-        setFeatures(prev => ({ ...prev, [feature]: !prev[feature] }));
+    // Load saved feature settings on mount
+    useEffect(() => {
+        const loadSettings = async () => {
+            const savedSettings = await StorageService.getFeatureSettings();
+            setFeatures(savedSettings);
+        };
+        loadSettings();
+    }, []);
+
+    const toggleFeature = async (feature: keyof FeatureSettings) => {
+        const newSettings = { ...features, [feature]: !features[feature] };
+        setFeatures(newSettings);
+        // Save to storage
+        await StorageService.saveFeatureSettings(newSettings);
     };
 
     return (

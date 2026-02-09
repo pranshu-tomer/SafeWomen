@@ -1,23 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import AudioService from '../services/AudioService';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { StorageService, FeatureSettings, DEFAULT_FEATURE_SETTINGS } from '../services/StorageService';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const HomeScreen = () => {
     const navigation = useNavigation<HomeScreenNavigationProp>();
     const [isMonitoring, setIsMonitoring] = useState(false);
-    const [features, setFeatures] = useState({
-        voiceDetection: false,
-        powerButton: false,
-        runningDetection: false,
-        throwDetection: false,
-        safeLocation: false,
-        switchOffProtection: false,
-    });
+    const [features, setFeatures] = useState<FeatureSettings>(DEFAULT_FEATURE_SETTINGS);
+
+    // Load feature settings every time screen gains focus
+    useFocusEffect(
+        useCallback(() => {
+            const loadSettings = async () => {
+                const savedSettings = await StorageService.getFeatureSettings();
+                setFeatures(savedSettings);
+            };
+            loadSettings();
+        }, [])
+    );
 
     const toggleMonitoring = () => {
         if (isMonitoring) {
@@ -32,10 +37,6 @@ const HomeScreen = () => {
                 }
             });
         }
-    };
-
-    const toggleFeature = (feature: keyof typeof features) => {
-        setFeatures(prev => ({ ...prev, [feature]: !prev[feature] }));
     };
 
     return (
@@ -95,37 +96,31 @@ const HomeScreen = () => {
                         icon="🎤"
                         title="Voice Detection"
                         isOn={features.voiceDetection}
-                        onToggle={() => toggleFeature('voiceDetection')}
                     />
                     <FeatureItem
                         icon="⚪"
                         title="Power Button (5x)"
                         isOn={features.powerButton}
-                        onToggle={() => toggleFeature('powerButton')}
                     />
                     <FeatureItem
                         icon="🏃"
                         title="Running Detection"
                         isOn={features.runningDetection}
-                        onToggle={() => toggleFeature('runningDetection')}
                     />
                     <FeatureItem
                         icon="💥"
                         title="Throw Detection"
                         isOn={features.throwDetection}
-                        onToggle={() => toggleFeature('throwDetection')}
                     />
                     <FeatureItem
                         icon="📍"
                         title="Safe Location"
                         isOn={features.safeLocation}
-                        onToggle={() => toggleFeature('safeLocation')}
                     />
                     <FeatureItem
                         icon="📱"
                         title="Switch Off Protection"
                         isOn={features.switchOffProtection}
-                        onToggle={() => toggleFeature('switchOffProtection')}
                     />
                 </View>
             </ScrollView>
@@ -137,21 +132,21 @@ interface FeatureItemProps {
     icon: string;
     title: string;
     isOn: boolean;
-    onToggle: () => void;
 }
 
-const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, isOn, onToggle }) => (
+// Read-only feature display - no toggle functionality
+const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, isOn }) => (
     <View style={styles.featureItem}>
         <View style={styles.featureLeft}>
             <Text style={styles.featureIcon}>{icon}</Text>
             <Text style={styles.featureTitle}>{title}</Text>
         </View>
-        <TouchableOpacity style={styles.toggleContainer} onPress={onToggle}>
-            <View style={[styles.toggle, isOn && styles.toggleOn]}>
-                <View style={[styles.toggleThumb, isOn && styles.toggleThumbOn]} />
-            </View>
-            <Text style={styles.toggleText}>{isOn ? 'ON' : 'OFF'}</Text>
-        </TouchableOpacity>
+        <View style={styles.statusContainer}>
+            <View style={[styles.statusDot, isOn && styles.statusDotOn]} />
+            <Text style={[styles.statusText, isOn && styles.statusTextOn]}>
+                {isOn ? 'ON' : 'OFF'}
+            </Text>
+        </View>
     </View>
 );
 
@@ -322,6 +317,33 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: '#6B7280',
         fontWeight: '600',
+    },
+    // Status display styles (read-only)
+    statusContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        backgroundColor: '#F3F4F6',
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#9CA3AF',
+        marginRight: 6,
+    },
+    statusDotOn: {
+        backgroundColor: '#10B981',
+    },
+    statusText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#6B7280',
+    },
+    statusTextOn: {
+        color: '#059669',
     },
 });
 

@@ -2,11 +2,31 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CALL_CONTACT_KEY = '@emergency_call_contact';
 const SMS_CONTACTS_KEY = '@emergency_sms_contacts';
+const FEATURES_KEY = '@feature_settings';
 
 export interface EmergencyContacts {
     callContact: string | null;
     smsContacts: string[];
 }
+
+export interface FeatureSettings {
+    voiceDetection: boolean;
+    powerButton: boolean;
+    runningDetection: boolean;
+    throwDetection: boolean;
+    safeLocation: boolean;
+    switchOffProtection: boolean;
+}
+
+// Default feature settings - all features are OFF by default
+export const DEFAULT_FEATURE_SETTINGS: FeatureSettings = {
+    voiceDetection: false,
+    powerButton: false,
+    runningDetection: false,
+    throwDetection: false,
+    safeLocation: false,
+    switchOffProtection: false,
+};
 
 export class StorageService {
     /**
@@ -91,4 +111,33 @@ export class StorageService {
             throw error;
         }
     }
+
+    /**
+     * Save feature settings
+     */
+    static async saveFeatureSettings(settings: FeatureSettings): Promise<void> {
+        try {
+            await AsyncStorage.setItem(FEATURES_KEY, JSON.stringify(settings));
+        } catch (error) {
+            console.error('Error saving feature settings:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get feature settings (returns defaults if none saved)
+     */
+    static async getFeatureSettings(): Promise<FeatureSettings> {
+        try {
+            const settings = await AsyncStorage.getItem(FEATURES_KEY);
+            if (settings) {
+                return { ...DEFAULT_FEATURE_SETTINGS, ...JSON.parse(settings) };
+            }
+            return DEFAULT_FEATURE_SETTINGS;
+        } catch (error) {
+            console.error('Error getting feature settings:', error);
+            return DEFAULT_FEATURE_SETTINGS;
+        }
+    }
 }
+
