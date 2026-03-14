@@ -1,0 +1,48 @@
+<svg width="100%" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#4C1D95"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:0.18"/>
+      <stop offset="100%" style="stop-color:#4C1D95;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F9A8D4"/>
+      <stop offset="100%" style="stop-color:#FBCFE8"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+    </filter>
+  </defs>
+
+  <!-- soft bg glow -->
+  <ellipse cx="200" cy="210" rx="110" ry="110" fill="url(#glowGrad)" filter="url(#soft)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Shield shape -->
+  <path d="M200 90 L255 112 L255 185 Q255 228 200 248 Q145 228 145 185 L145 112 Z" fill="url(#shieldGrad)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Shield inner highlight -->
+  <path d="M200 100 L247 120 L247 183 Q247 221 200 239 Q200 239 200 100" fill="rgba(255,255,255,0.06)" style="fill:rgba(255, 255, 255, 0.06);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Shield border -->
+  <path d="M200 90 L255 112 L255 185 Q255 228 200 248 Q145 228 145 185 L145 112 Z" fill="none" stroke="#A78BFA" stroke-width="1.5" opacity="0.6" style="fill:none;stroke:rgb(167, 139, 250);color:rgb(255, 255, 255);stroke-width:1.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.6;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Heart inside shield -->
+  <path d="M200 196 Q189 187 184 180 Q178 171 184 163 Q190 155 196 160 Q198 162 200 165 Q202 162 204 160 Q210 155 216 163 Q222 171 216 180 Q211 187 200 196 Z" fill="url(#heartGrad)" opacity="0.95" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.95;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Subtle pulse ring 1 -->
+  <circle cx="200" cy="169" r="52" fill="none" stroke="#7C3AED" stroke-width="1" opacity="0.2" style="fill:none;stroke:rgb(124, 58, 237);color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.2;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <!-- Subtle pulse ring 2 -->
+  <circle cx="200" cy="169" r="68" fill="none" stroke="#7C3AED" stroke-width="0.8" opacity="0.1" style="fill:none;stroke:rgb(124, 58, 237);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- App name -->
+  <text x="290" y="178" font-family="Georgia, serif" font-size="58" font-weight="400" fill="#1e1040" letter-spacing="-1" style="fill:rgb(30, 16, 64);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, serif;font-size:58px;font-weight:400;text-anchor:start;dominant-baseline:auto">Raksha</text>
+
+  <!-- Tagline -->
+  <text x="292" y="208" font-family="Georgia, sans-serif" font-size="15" font-weight="300" fill="#7C3AED" letter-spacing="4" style="fill:rgb(124, 58, 237);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Georgia, sans-serif;font-size:15px;font-weight:300;text-anchor:start;dominant-baseline:auto">YOUR SAFETY COMPANION</text>
+
+  <!-- Thin divider line under tagline -->
+  <line x1="292" y1="220" x2="580" y2="220" stroke="#C4B5FD" stroke-width="0.8" opacity="0.5" style="fill:rgb(0, 0, 0);stroke:rgb(196, 181, 253);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.5;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+</svg>

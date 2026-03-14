@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
-    StatusBar, Modal, TextInput, Alert,
+    StatusBar, Modal, TextInput, Alert, Switch,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { StorageService } from '../services/StorageService';
@@ -12,6 +12,33 @@ type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList
 
 const SettingsScreen = () => {
     const navigation = useNavigation<SettingsScreenNavigationProp>();
+
+    // Shake detection toggle
+    const [shakeEnabled, setShakeEnabled] = useState(false);
+    // Voice analysis toggle
+    const [voiceEnabled, setVoiceEnabled] = useState(false);
+
+    // Load settings whenever screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            StorageService.getFeatureSettings().then(s => {
+                setShakeEnabled(s.shakeDetection);
+                setVoiceEnabled(s.voiceDetection);
+            });
+        }, [])
+    );
+
+    const toggleShakeDetection = async (value: boolean) => {
+        setShakeEnabled(value);
+        const current = await StorageService.getFeatureSettings();
+        await StorageService.saveFeatureSettings({ ...current, shakeDetection: value });
+    };
+
+    const toggleVoiceAnalysis = async (value: boolean) => {
+        setVoiceEnabled(value);
+        const current = await StorageService.getFeatureSettings();
+        await StorageService.saveFeatureSettings({ ...current, voiceDetection: value });
+    };
 
     // Change Password modal state
     const [pwModalVisible, setPwModalVisible] = useState(false);
@@ -65,6 +92,46 @@ const SettingsScreen = () => {
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {/* Features Section */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionIcon}>✨</Text>
+                        <Text style={styles.sectionTitle}>Features</Text>
+                    </View>
+
+                    {/* Voice Analysis */}
+                    <View style={styles.switchItem}>
+                        <View style={styles.switchItemLeft}>
+                            <Text style={styles.switchItemTitle}>Voice Analysis</Text>
+                            <Text style={styles.switchItemDesc}>
+                                Listen for distress sounds to trigger SOS
+                            </Text>
+                        </View>
+                        <Switch
+                            value={voiceEnabled}
+                            onValueChange={toggleVoiceAnalysis}
+                            trackColor={{ false: '#D1D5DB', true: '#7C3AED' }}
+                            thumbColor="#FFFFFF"
+                        />
+                    </View>
+
+                    {/* Shake Detection */}
+                    <View style={styles.switchItem}>
+                        <View style={styles.switchItemLeft}>
+                            <Text style={styles.switchItemTitle}>Shake Detection</Text>
+                            <Text style={styles.switchItemDesc}>
+                                Shake phone to instantly trigger SOS
+                            </Text>
+                        </View>
+                        <Switch
+                            value={shakeEnabled}
+                            onValueChange={toggleShakeDetection}
+                            trackColor={{ false: '#D1D5DB', true: '#7C3AED' }}
+                            thumbColor="#FFFFFF"
+                        />
+                    </View>
+                </View>
+
                 {/* Security Section */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
@@ -266,6 +333,21 @@ const styles = StyleSheet.create({
     modalBtnSave: { backgroundColor: '#7C3AED' },
     modalBtnCancelText: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
     modalBtnSaveText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
+
+    // Switch row
+    switchItem: {
+        backgroundColor: '#FFFFFF',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    switchItemLeft: { flex: 1, marginRight: 12 },
+    switchItemTitle: { fontSize: 16, color: '#111827', marginBottom: 3 },
+    switchItemDesc: { fontSize: 12, color: '#9CA3AF', lineHeight: 17 },
 });
 
 export default SettingsScreen;

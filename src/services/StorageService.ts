@@ -19,6 +19,7 @@ export interface FeatureSettings {
     throwDetection: boolean;
     safeLocation: boolean;
     switchOffProtection: boolean;
+    shakeDetection: boolean;
 }
 
 // Default feature settings - all features are OFF by default
@@ -29,6 +30,7 @@ export const DEFAULT_FEATURE_SETTINGS: FeatureSettings = {
     throwDetection: false,
     safeLocation: false,
     switchOffProtection: false,
+    shakeDetection: false,
 };
 
 export class StorageService {

@@ -9,6 +9,7 @@ import {
     Dimensions,
 } from 'react-native';
 import AudioService from '../services/AudioService';
+import ShakeService from '../services/ShakeService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -184,17 +185,33 @@ const HomeScreen = () => {
         if (isMonitoring) {
             AudioService.stopMonitoring();
             LocationService.stopWatchingLocation();
+            ShakeService.stop();
             setIsMonitoring(false);
             setIsInSafeZone(false);
             setCurrentSafeZone(null);
         } else {
             setIsMonitoring(true);
-            AudioService.startMonitoring((result) => {
-                if (result.threat && !isInSafeZone) {
+
+            // Start voice analysis only if enabled
+            if (features.voiceDetection) {
+                AudioService.startMonitoring((result) => {
+                    if (result.threat && !isInSafeZone) {
+                        setIsMonitoring(false);
+                        ShakeService.stop();
+                        navigation.navigate('Threat', { details: result.details });
+                    }
+                });
+            }
+
+            // Start shake detection only if enabled
+            if (features.shakeDetection) {
+                ShakeService.start(() => {
                     setIsMonitoring(false);
-                    navigation.navigate('Threat', { details: result.details });
-                }
-            });
+                    ShakeService.stop();
+                    AudioService.stopMonitoring();
+                    navigation.navigate('Threat', { details: 'Phone shaken — shake SOS triggered' });
+                });
+            }
         }
     };
 
@@ -206,10 +223,9 @@ const HomeScreen = () => {
 
     // ── Feature cards data ──────────────────────────────────────────────────
     const featureCards = [
-        { emoji: '🎤', label: 'Voice', active: features.voiceDetection },
-        { emoji: '📍', label: 'Location', active: features.safeLocation },
-        { emoji: '🏃', label: 'Motion', active: features.runningDetection },
-        { emoji: '📳', label: 'Shake SOS', active: features.throwDetection },
+        { emoji: '🎤', label: 'Voice', enabled: features.voiceDetection },
+        { emoji: '📍', label: 'Location', enabled: features.safeLocation },
+        { emoji: '📳', label: 'Shake SOS', enabled: features.shakeDetection },
     ];
 
     return (
@@ -292,6 +308,12 @@ const HomeScreen = () => {
                 {featureCards.map((card, i) => {
                     const isLocation = card.label === 'Location';
                     const CardWrapper = isLocation ? TouchableOpacity : View;
+                    // Dot logic: grey when idle; green if feature ON, red if feature OFF while monitoring
+                    const dotStyle = !isMonitoring
+                        ? styles.featureDot
+                        : card.enabled
+                            ? [styles.featureDot, styles.featureDotActive]
+                            : [styles.featureDot, styles.featureDotInactive];
                     return (
                         <CardWrapper
                             key={i}
@@ -300,10 +322,7 @@ const HomeScreen = () => {
                         >
                             <Text style={styles.featureEmoji}>{card.emoji}</Text>
                             <Text style={styles.featureLabel}>{card.label}</Text>
-                            <View style={[
-                                styles.featureDot,
-                                card.active && isMonitoring && styles.featureDotActive,
-                            ]} />
+                            <View style={dotStyle} />
                         </CardWrapper>
                     );
                 })}
@@ -520,6 +539,9 @@ const styles = StyleSheet.create({
     },
     featureDotActive: {
         backgroundColor: '#10B981',
+    },
+    featureDotInactive: {
+        backgroundColor: '#EF4444',
     },
 
     // Bottom bar
