@@ -21,6 +21,8 @@ const RegistrationScreen = () => {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [preference, setPreference] = useState<'call' | 'sms' | 'both'>('both');
+    const [masterPassword, setMasterPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
@@ -28,11 +30,19 @@ const RegistrationScreen = () => {
             Alert.alert('Error', 'Please enter an emergency number');
             return;
         }
-        setLoading(true);
         if (phoneNumber.length < 10) {
             Alert.alert('Invalid Number', 'Please enter a valid phone number');
             return;
         }
+        if (!masterPassword || masterPassword.length < 4) {
+            Alert.alert('Weak Password', 'Master password must be at least 4 characters.');
+            return;
+        }
+        if (masterPassword !== confirmPassword) {
+            Alert.alert('Mismatch', 'Passwords do not match.');
+            return;
+        }
+        setLoading(true);
 
         let updatedContacts: Contact[];
         const newContact: Contact = {
@@ -43,8 +53,9 @@ const RegistrationScreen = () => {
         updatedContacts = [...contacts, newContact];
         setContacts(updatedContacts);
         await persistContacts(updatedContacts);
-        navigation.replace('MainTabs');
-        setLoading(false)
+        await StorageService.saveMasterPassword(masterPassword);
+        navigation.replace('Home');
+        setLoading(false);
     };
 
     const persistContacts = async (currentContacts: Contact[]) => {
@@ -104,6 +115,28 @@ const RegistrationScreen = () => {
                         </TouchableOpacity>
                     ))}
                 </View>
+
+                <Text style={styles.label}>Master Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Set a 4+ digit password"
+                    value={masterPassword}
+                    onChangeText={setMasterPassword}
+                    secureTextEntry
+                    keyboardType="numeric"
+                    placeholderTextColor="#999"
+                />
+
+                <Text style={styles.label}>Confirm Master Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Re-enter your password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    keyboardType="numeric"
+                    placeholderTextColor="#999"
+                />
 
                 <TouchableOpacity
                     style={[styles.saveButton, loading && styles.saveButtonDisabled]}

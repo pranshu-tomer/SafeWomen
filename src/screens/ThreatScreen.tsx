@@ -17,16 +17,19 @@ const ThreatScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [password, setPassword] = useState('');
     const [sosTriggered, setSosTriggered] = useState(false);
+    const [masterPassword, setMasterPassword] = useState('1234');
 
-    // Hardcoded password for demo
-    const CORRECT_PASSWORD = '1234';
+    // Load master password from storage on mount
+    useEffect(() => {
+        StorageService.getMasterPassword().then(setMasterPassword);
+    }, []);
 
+    // Countdown useEffect
     useEffect(() => {
         if (countdown > 0) {
             const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
             return () => clearTimeout(timer);
         } else if (countdown === 0 && !sosTriggered) {
-            // Trigger SOS only once
             setSosTriggered(true);
             triggerSOS();
         }
@@ -36,12 +39,10 @@ const ThreatScreen = () => {
         console.log('🚨 SOS TRIGGERED - Starting emergency response');
 
         try {
-            // Get emergency contacts
             console.log('📞 Retrieving emergency contacts...');
             const { callContact, smsContacts } = await StorageService.getAllContacts();
             console.log('Contacts retrieved:', { callContact, smsContacts });
 
-            // Check if contacts are configured
             if (!callContact && smsContacts.length === 0) {
                 console.log('❌ No emergency contacts found');
                 Alert.alert(
@@ -51,7 +52,6 @@ const ThreatScreen = () => {
                 return;
             }
 
-            // Make emergency call
             if (callContact) {
                 console.log('📱 Attempting to call:', callContact);
                 const hasPermission = await PermissionsService.hasCallPermission();
@@ -60,12 +60,10 @@ const ThreatScreen = () => {
                 if (hasPermission) {
                     try {
                         console.log('✅ Making direct call to:', callContact);
-                        // Use immediate phone call to dial directly without user interaction
                         RNImmediatePhoneCall.immediatePhoneCall(callContact);
                         console.log('📞 Call initiated to:', callContact);
                     } catch (error) {
                         console.log('❌ Error making call:', error);
-                        // Fallback to dialer if direct call fails
                         const phoneUrl = `tel:${callContact}`;
                         await Linking.openURL(phoneUrl);
                         Alert.alert('Error', 'Unable to make direct call, opened dialer instead');
@@ -81,7 +79,6 @@ const ThreatScreen = () => {
                 console.log('⚠️ No call contact configured');
             }
 
-            // Send SMS to all SMS contacts
             if (smsContacts.length > 0) {
                 console.log('💬 Attempting to send SMS to:', smsContacts);
                 const hasPermission = await PermissionsService.hasSMSPermission();
@@ -109,22 +106,15 @@ const ThreatScreen = () => {
         try {
             const message = '🚨 EMERGENCY ALERT! I may be in danger. This is an automated message from my safety app.';
 
-            // For Android, we'll use the SMS intent
             if (Platform.OS === 'android') {
-                // Send to each contact
                 for (const contact of contacts) {
                     const smsUrl = `sms:${contact}?body=${encodeURIComponent(message)}`;
                     const canOpen = await Linking.canOpenURL(smsUrl);
-
                     if (canOpen) {
                         await Linking.openURL(smsUrl);
                     }
                 }
-
-                Alert.alert(
-                    'SMS Sent',
-                    `Emergency SMS sent to ${contacts.length} contact(s)`
-                );
+                Alert.alert('SMS Sent', `Emergency SMS sent to ${contacts.length} contact(s)`);
             }
         } catch (error) {
             console.error('Error sending SMS:', error);
@@ -137,11 +127,11 @@ const ThreatScreen = () => {
     };
 
     const verifyPassword = () => {
-        if (password === CORRECT_PASSWORD) {
+        if (password === masterPassword) {
             setModalVisible(false);
-            navigation.replace('MainTabs');
+            navigation.replace('Home');
         } else {
-            Alert.alert("Incorrect Password", "Please try again.");
+            Alert.alert('Incorrect Password', 'Please try again.');
             setPassword('');
         }
     };
@@ -149,7 +139,7 @@ const ThreatScreen = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.alertText}>⚠️ THREAT DETECTED ⚠️</Text>
-            <Text style={styles.detailsText}>{route.params?.details || "Suspicious audio detected"}</Text>
+            <Text style={styles.detailsText}>{route.params?.details || 'Suspicious audio detected'}</Text>
 
             <View style={styles.timerContainer}>
                 <Text style={styles.timerText}>{countdown}</Text>
@@ -197,13 +187,11 @@ const styles = StyleSheet.create({
     timerLabel: { fontSize: 20, color: 'white' },
     safeButton: { backgroundColor: 'white', paddingHorizontal: 40, paddingVertical: 15, borderRadius: 30 },
     safeButtonText: { color: '#800000', fontSize: 18, fontWeight: 'bold' },
-
-    // Modal styles
     centeredView: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 22 },
     modalView: { margin: 20, backgroundColor: 'white', borderRadius: 20, padding: 35, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5, width: '80%' },
     modalText: { marginBottom: 15, textAlign: 'center', fontSize: 18 },
     input: { borderWidth: 1, borderColor: '#ccc', width: '100%', padding: 10, marginBottom: 20, borderRadius: 5, textAlign: 'center' },
-    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' }
+    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 });
 
 export default ThreatScreen;

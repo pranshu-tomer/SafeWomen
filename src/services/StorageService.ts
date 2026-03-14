@@ -5,6 +5,7 @@ const CALL_CONTACT_KEY = '@emergency_call_contact';
 const SMS_CONTACTS_KEY = '@emergency_sms_contacts';
 const FEATURES_KEY = '@feature_settings';
 const SAFE_LOCATIONS_KEY = '@safe_locations';
+const MASTER_PASSWORD_KEY = '@master_password';
 
 export interface EmergencyContacts {
     callContact: string | null;
@@ -183,6 +184,30 @@ export class StorageService {
         const locations = await this.getSafeLocations();
         const filtered = locations.filter(loc => loc.id !== id);
         await this.saveSafeLocations(filtered);
+    }
+
+    /**
+     * Get master password (defaults to '1234' if never set)
+     */
+    static async getMasterPassword(): Promise<string> {
+        try {
+            const pw = await AsyncStorage.getItem(MASTER_PASSWORD_KEY);
+            return pw ?? '1234';
+        } catch {
+            return '1234';
+        }
+    }
+
+    /**
+     * Save new master password
+     */
+    static async saveMasterPassword(password: string): Promise<void> {
+        try {
+            await AsyncStorage.setItem(MASTER_PASSWORD_KEY, password);
+        } catch (error) {
+            console.error('Error saving master password:', error);
+            throw error;
+        }
     }
 }
 
