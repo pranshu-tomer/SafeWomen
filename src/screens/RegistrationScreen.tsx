@@ -4,11 +4,21 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { StorageService } from '../services/StorageService';
+
+import { API_URL } from '@env';
+
+interface Contact {
+    id: string;
+    name: string;
+    phone: string;
+}
 
 type RegistrationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Registration'>;
 
 const RegistrationScreen = () => {
     const navigation = useNavigation<RegistrationScreenNavigationProp>();
+    const [contacts, setContacts] = useState<Contact[]>([]);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [preference, setPreference] = useState<'call' | 'sms' | 'both'>('both');
     const [loading, setLoading] = useState(false);
@@ -19,20 +29,38 @@ const RegistrationScreen = () => {
             return;
         }
         setLoading(true);
-        try {
-            // Using localhost with adb reverse (works on device & emulator)
-            const response = await axios.post('http://localhost:5000/contacts', {
-                contacts: [phoneNumber],
-                preference
-            }, { timeout: 5000 }); // 5s timeout
-            console.log("Save response:", response.status);
-            navigation.replace('MainTabs');
-        } catch (error) {
-            console.error(error);
-            Alert.alert('Error', 'Failed to save contacts');
-        } finally {
-            setLoading(false);
+        if (phoneNumber.length < 10) {
+            Alert.alert('Invalid Number', 'Please enter a valid phone number');
+            return;
         }
+
+        let updatedContacts: Contact[];
+        const newContact: Contact = {
+            id: `sms-${Date.now()}`,
+            name: 'Emergency Contact',
+            phone: phoneNumber.trim(),
+        };
+        updatedContacts = [...contacts, newContact];
+        setContacts(updatedContacts);
+        await persistContacts(updatedContacts);
+        navigation.replace('MainTabs');
+        setLoading(false)
+    };
+
+    const persistContacts = async (currentContacts: Contact[]) => {
+        if (currentContacts.length === 0) {
+            await StorageService.clearAllContacts();
+            return;
+        }
+
+        const callContact = currentContacts.find(c => c.id === 'call')?.phone || currentContacts[0].phone;
+        const smsContacts = currentContacts.filter(c => c.id !== 'call').map(c => c.phone);
+
+        if (smsContacts.length === 0) {
+            smsContacts.push(callContact);
+        }
+
+        await StorageService.saveContacts(callContact, smsContacts);
     };
 
     return (

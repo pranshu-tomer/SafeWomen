@@ -73,6 +73,22 @@ const EmergencyContactsScreen = () => {
         setModalVisible(true);
     };
 
+    const persistContacts = async (currentContacts: Contact[]) => {
+        if (currentContacts.length === 0) {
+            await StorageService.clearAllContacts();
+            return;
+        }
+
+        const callContact = currentContacts.find(c => c.id === 'call')?.phone || currentContacts[0].phone;
+        const smsContacts = currentContacts.filter(c => c.id !== 'call').map(c => c.phone);
+
+        if (smsContacts.length === 0) {
+            smsContacts.push(callContact);
+        }
+
+        await StorageService.saveContacts(callContact, smsContacts);
+    };
+
     const saveContact = async () => {
         if (!name.trim() || !phone.trim()) {
             Alert.alert('Missing Information', 'Please enter both name and phone number');
@@ -84,12 +100,12 @@ const EmergencyContactsScreen = () => {
             return;
         }
 
+        let updatedContacts: Contact[];
         if (editingContact) {
             // Update existing contact
-            const updatedContacts = contacts.map(c =>
+            updatedContacts = contacts.map(c =>
                 c.id === editingContact.id ? { ...c, name: name.trim(), phone: phone.trim() } : c
             );
-            setContacts(updatedContacts);
         } else {
             // Add new contact
             const newContact: Contact = {
@@ -97,8 +113,11 @@ const EmergencyContactsScreen = () => {
                 name: name.trim(),
                 phone: phone.trim(),
             };
-            setContacts([...contacts, newContact]);
+            updatedContacts = [...contacts, newContact];
         }
+
+        setContacts(updatedContacts);
+        await persistContacts(updatedContacts);
 
         setModalVisible(false);
         setName('');
@@ -114,8 +133,10 @@ const EmergencyContactsScreen = () => {
                 {
                     text: 'Delete',
                     style: 'destructive',
-                    onPress: () => {
-                        setContacts(contacts.filter(c => c.id !== id));
+                    onPress: async () => {
+                        const updatedContacts = contacts.filter(c => c.id !== id);
+                        setContacts(updatedContacts);
+                        await persistContacts(updatedContacts);
                     },
                 },
             ]

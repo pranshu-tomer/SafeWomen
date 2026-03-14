@@ -24,6 +24,8 @@ DerivedData
 
 android/app/src/main/AndroidManifest.xml
 
+mock-server/uploads/
+
 # Android/IntelliJ
 #
 build/

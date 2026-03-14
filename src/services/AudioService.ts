@@ -3,6 +3,8 @@ import { Platform, PermissionsAndroid } from 'react-native';
 import Sound from 'react-native-nitro-sound';
 import RNFS from 'react-native-fs';
 
+import { API_URL } from '@env';
+
 type PredictionCallback = (result: { threat: boolean; details?: string }) => void;
 
 class AudioService {
@@ -103,13 +105,13 @@ class AudioService {
                         name: 'audio.wav',
                     } as any);
 
+                    console.log('API_URL:', API_URL);
                     // Using localhost with adb reverse
-                    const response = await axios.post('http://localhost:5000/predict', formData, {
+                    const response = await axios.post(`${API_URL}/predict`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
                     });
-
                     console.log('Prediction response:', response.data);
                     if (response.data.threat) {
                         onPrediction(response.data);
