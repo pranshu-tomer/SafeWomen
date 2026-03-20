@@ -107,7 +107,7 @@ class AudioService {
 
                     console.log('API_URL:', API_URL);
                     // Using localhost with adb reverse
-                    const response = await axios.post(`${API_URL}/predict`, formData, {
+                    const response = await axios.post(`https://jacalyn-catechismal-termly.ngrok-free.dev/predict`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
